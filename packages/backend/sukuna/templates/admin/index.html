@@ -1,0 +1,985 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}
+Dashboard | Jatayu AI
+{% endblock %}
+
+{% block branding %}
+{% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Jatayu AI — dark-first admin dashboard.
+       Legacy --zen-* names are kept as aliases to Jatayu values so the rest
+       of the template (900+ lines of inline CSS) renders correctly without
+       surgical replacement. See docs/design-system.md. */
+    :root {
+        --jatayu-bg: #0B0B0C;
+        --jatayu-surface: #111113;
+        --jatayu-surface-2: #151517;
+        --jatayu-text-primary: #F5F5F7;
+        --jatayu-text-secondary: #9A9AA0;
+        --jatayu-text-tertiary: #5A5A60;
+        --jatayu-accent: #EDEDED;
+        --jatayu-success: #6EE7B7;
+        --jatayu-error: #FF6B6B;
+        --jatayu-warning: #FACC15;
+
+        /* Legacy zen-* aliases → Jatayu values (dark mode). */
+        --zen-paper: var(--jatayu-surface);
+        --zen-dark: var(--jatayu-text-primary);
+        --zen-muted: rgba(245, 245, 247, 0.06);
+        --zen-subtle: rgba(245, 245, 247, 0.10);
+        --zen-coral: var(--jatayu-accent);
+        --zen-blue: var(--jatayu-accent);
+        --zen-green: var(--jatayu-success);
+
+        /* Typography — system stack, mono for code/telemetry. */
+        --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* Light-mode override. */
+    [data-theme='light'] {
+        --jatayu-bg: #FFFFFF;
+        --jatayu-surface: #F5F6F8;
+        --jatayu-surface-2: #ECEEF1;
+        --jatayu-text-primary: #202124;
+        --jatayu-text-secondary: #5F6368;
+        --jatayu-text-tertiary: #9A9AA0;
+        --jatayu-accent: #1A1A1C;
+
+        --zen-paper: var(--jatayu-surface);
+        --zen-dark: var(--jatayu-text-primary);
+        --zen-muted: rgba(26, 26, 28, 0.04);
+        --zen-subtle: rgba(26, 26, 28, 0.08);
+    }
+
+    .dashboard-container {
+        font-family: var(--font-sans);
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--zen-subtle);
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: var(--zen-dark);
+        margin: 0 0 0.375rem 0;
+        letter-spacing: -0.025em;
+    }
+
+    .dashboard-header p {
+        color: rgba(245, 245, 247, 0.6);
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-card {
+        background: var(--zen-paper);
+        border: 1px solid var(--zen-subtle);
+        border-radius: 8px;
+        padding: 1.25rem;
+    }
+
+    .stat-card .label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: rgba(245, 245, 247, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card .value {
+        font-size: 1.875rem;
+        font-weight: 500;
+        color: var(--zen-dark);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
+    }
+
+    .stat-card .meta {
+        font-size: 0.75rem;
+        font-family: var(--font-mono);
+        color: rgba(245, 245, 247, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .stat-card .meta .positive {
+        color: var(--zen-green);
+    }
+
+    .stat-card .meta .negative {
+        color: var(--zen-coral);
+    }
+
+    .section-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .section-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .card {
+        background: var(--zen-paper);
+        border: 1px solid var(--zen-subtle);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--zen-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header h3 {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--zen-dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-header .badge {
+        font-size: 0.625rem;
+        font-weight: 500;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        background: var(--zen-subtle);
+        color: rgba(245, 245, 247, 0.6);
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .chart-container {
+        height: 220px;
+        position: relative;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 0.625rem 1rem;
+        font-weight: 500;
+        color: rgba(245, 245, 247, 0.6);
+        border-bottom: 1px solid var(--zen-subtle);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        color: var(--zen-dark);
+        border-bottom: 1px solid var(--zen-subtle);
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+        background: var(--zen-muted);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 9999px;
+        font-size: 0.6875rem;
+        font-weight: 500;
+    }
+
+    .status-badge.success {
+        background: rgba(110, 231, 183, 0.1);
+        color: var(--zen-green);
+    }
+
+    .status-badge.warning {
+        background: rgba(250, 204, 21, 0.1);
+        color: #FACC15;
+    }
+
+    .status-badge.error {
+        background: rgba(237, 237, 237, 0.1);
+        color: var(--zen-coral);
+    }
+
+    .status-badge.info {
+        background: rgba(237, 237, 237, 0.1);
+        color: var(--zen-blue);
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .metric-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--zen-subtle);
+    }
+
+    .metric-row:last-child {
+        border-bottom: none;
+    }
+
+    .metric-row .metric-label {
+        font-size: 0.8125rem;
+        color: rgba(245, 245, 247, 0.6);
+    }
+
+    .metric-row .metric-value {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--zen-dark);
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: var(--zen-subtle);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .progress-bar .fill {
+        height: 100%;
+        background: var(--zen-coral);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .mini-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--zen-muted);
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
+    .mini-stat:last-child {
+        margin-bottom: 0;
+    }
+
+    .mini-stat .icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: var(--zen-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(245, 245, 247, 0.6);
+        font-size: 1rem;
+    }
+
+    .mini-stat .info {
+        flex: 1;
+    }
+
+    .mini-stat .info .title {
+        font-size: 0.75rem;
+        color: rgba(245, 245, 247, 0.6);
+    }
+
+    .mini-stat .info .value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--zen-dark);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(245, 245, 247, 0.5);
+        font-size: 0.875rem;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--zen-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--zen-dark);
+    }
+
+    .truncate {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .text-muted {
+        color: rgba(245, 245, 247, 0.5);
+    }
+
+    .text-sm {
+        font-size: 0.75rem;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <p>Platform analytics and performance metrics</p>
+    </div>
+
+    <!-- Primary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">Total Users</div>
+            <div class="value">{{ total_users|default:0 }}</div>
+            <div class="meta">
+                <span class="positive">+{{ new_users_today|default:0 }}</span> today
+                <span style="margin-left: 0.5rem;">{{ new_users_week|default:0 }} this week</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Conversations</div>
+            <div class="value">{{ total_conversations|default:0 }}</div>
+            <div class="meta">
+                <span class="positive">{{ conversations_with_messages|default:0 }}</span> with messages
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Total Tasks</div>
+            <div class="value">{{ total_tasks|default:0 }}</div>
+            <div class="meta">
+                <span class="positive">+{{ tasks_today|default:0 }}</span> today
+                <span style="margin-left: 0.5rem;">{{ tasks_week|default:0 }} this week</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Messages</div>
+            <div class="value">{{ total_messages|default:0 }}</div>
+            <div class="meta">
+                <span class="positive">+{{ messages_today|default:0 }}</span> today
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">Active Subscriptions</div>
+            <div class="value">{{ active_subscriptions|default:0 }}</div>
+            <div class="meta">
+                {{ trial_subscriptions|default:0 }} on trial
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Revenue (Payments)</div>
+            <div class="value">${{ total_revenue|default:"0.00" }}</div>
+            <div class="meta">
+                {{ total_payments|default:0 }} successful payments
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Active Sandboxes</div>
+            <div class="value">{{ active_sandboxes|default:0 }}</div>
+            <div class="meta">
+                {{ total_sandbox_hours|default:0 }}h total usage
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Model Providers</div>
+            <div class="value">{{ total_providers|default:0 }}</div>
+            <div class="meta">
+                {{ unique_provider_types|default:0 }} provider types
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="section-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>Conversations (Last 14 Days)</h3>
+                <span class="badge">Daily</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="conversationsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Tasks (Last 14 Days)</h3>
+                <span class="badge">Daily</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="tasksChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Distribution -->
+    <div class="grid-3">
+        <div class="card">
+            <div class="card-header">
+                <h3>Conversation Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 180px;">
+                    <canvas id="convStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Subscription Plans</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 180px;">
+                    <canvas id="plansChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Provider Distribution</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 180px;">
+                    <canvas id="providersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics -->
+    <div class="section-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>Platform Metrics</h3>
+            </div>
+            <div class="card-body">
+                <div class="metric-row">
+                    <span class="metric-label">Avg. Messages per Conversation</span>
+                    <span class="metric-value">{{ avg_messages_per_conv|default:"0.0" }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Avg. Tasks per User</span>
+                    <span class="metric-value">{{ avg_tasks_per_user|default:"0.0" }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Conversation Success Rate</span>
+                    <span class="metric-value">{{ conversation_success_rate|default:"0" }}%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Active User Rate (7d)</span>
+                    <span class="metric-value">{{ active_user_rate|default:"0" }}%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Tool Calls Executed</span>
+                    <span class="metric-value">{{ total_tool_calls|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Stored Files</span>
+                    <span class="metric-value">{{ total_files|default:0 }} ({{ total_file_size_mb|default:"0" }}
+                        MB)</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Billing Metrics</h3>
+            </div>
+            <div class="card-body">
+                <div class="metric-row">
+                    <span class="metric-label">MRR (Monthly Recurring)</span>
+                    <span class="metric-value">${{ mrr|default:"0.00" }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Failed Payments</span>
+                    <span class="metric-value">{{ failed_payments|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Trial Conversion Rate</span>
+                    <span class="metric-value">{{ trial_conversion_rate|default:"0" }}%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Churn Rate (30d)</span>
+                    <span class="metric-value">{{ churn_rate|default:"0" }}%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Active Coupons</span>
+                    <span class="metric-value">{{ active_coupons|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Paused Subscriptions</span>
+                    <span class="metric-value">{{ paused_subscriptions|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Tables -->
+    <div class="section-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Conversations</h3>
+                <span class="badge">Last 10</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for conv in recent_conversations %}
+                        <tr>
+                            <td class="truncate">{{ conv.title|truncatechars:30 }}</td>
+                            <td class="text-muted text-sm">{{ conv.user.email|truncatechars:20 }}</td>
+                            <td>
+                                {% if conv.on_going %}
+                                <span class="status-badge info"><span class="status-dot"></span>Running</span>
+                                {% elif conv.has_error %}
+                                <span class="status-badge error"><span class="status-dot"></span>Error</span>
+                                {% else %}
+                                <span class="status-badge success"><span class="status-dot"></span>Complete</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted text-sm">{{ conv.date_created|timesince }} ago</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">No conversations yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Users</h3>
+                <span class="badge">Last 10</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Conversations</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.625rem;">
+                                    <div class="user-avatar">{{ user.email|slice:":2"|upper }}</div>
+                                    <div>
+                                        <div style="font-weight: 500; color: var(--zinc-200);">{{ user }}</div>
+                                        <div class="text-muted text-sm">{{ user.email|truncatechars:25 }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.conversation_count|default:0 }}</td>
+                            <td class="text-muted text-sm">{{ user.date_joined|timesince }} ago</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="empty-state">No users yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- More Tables -->
+    <div class="section-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Payments</h3>
+                <span class="badge">Last 10</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in recent_payments %}
+                        <tr>
+                            <td class="text-sm">{{ payment.user.email|truncatechars:25 }}</td>
+                            <td style="font-weight: 500;">{{ payment.currency }} {{ payment.amount }}</td>
+                            <td>
+                                {% if payment.status == 'captured' %}
+                                <span class="status-badge success"><span class="status-dot"></span>Captured</span>
+                                {% elif payment.status == 'failed' %}
+                                <span class="status-badge error"><span class="status-dot"></span>Failed</span>
+                                {% else %}
+                                <span class="status-badge warning"><span class="status-dot"></span>{{
+                                    payment.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted text-sm">{{ payment.created_at|timesince }} ago</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">No payments yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Tasks</h3>
+                <span class="badge">Last 10</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>User</th>
+                            <th>Conversation</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in recent_tasks %}
+                        <tr>
+                            <td class="text-sm" style="font-family: monospace;">{{ task.task_id|truncatechars:12 }}</td>
+                            <td class="text-muted text-sm">{{ task.user.email|default:"-"|truncatechars:20 }}</td>
+                            <td class="truncate text-sm">{{ task.conversation.title|truncatechars:20 }}</td>
+                            <td class="text-muted text-sm">{{ task.created_at|timesince }} ago</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">No tasks yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Output Analytics -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header">
+            <h3>Agent Output Analytics</h3>
+        </div>
+        <div class="card-body">
+            <div class="stats-grid" style="margin-bottom: 0;">
+                <div class="mini-stat">
+                    <div class="icon"><span class="material-symbols-outlined">output</span></div>
+                    <div class="info">
+                        <div class="title">Total Outputs</div>
+                        <div class="value">{{ total_outputs|default:0 }}</div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="icon"><span class="material-symbols-outlined">code</span></div>
+                    <div class="info">
+                        <div class="title">Tool Calls</div>
+                        <div class="value">{{ total_tool_calls|default:0 }}</div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="icon"><span class="material-symbols-outlined">chat</span></div>
+                    <div class="info">
+                        <div class="title">Message Outputs</div>
+                        <div class="value">{{ total_message_outputs|default:0 }}</div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="icon"><span class="material-symbols-outlined">inventory</span></div>
+                    <div class="info">
+                        <div class="title">Tool Results</div>
+                        <div class="value">{{ total_tool_results|default:0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage and System Health -->
+    <div class="section-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>Usage by Plan</h3>
+            </div>
+            <div class="card-body">
+                {% for plan in plan_usage %}
+                <div class="metric-row">
+                    <span class="metric-label">{{ plan.name }}</span>
+                    <span class="metric-value">{{ plan.count }} users</span>
+                </div>
+                {% empty %}
+                <div class="empty-state">No plan data</div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>System Health</h3>
+            </div>
+            <div class="card-body">
+                <div class="metric-row">
+                    <span class="metric-label">Webhook Events (24h)</span>
+                    <span class="metric-value">{{ webhook_events_24h|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Failed Webhooks (24h)</span>
+                    <span class="metric-value">{{ failed_webhooks_24h|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Marketplace Addons</span>
+                    <span class="metric-value">{{ total_addons|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">User Addon Connections</span>
+                    <span class="metric-value">{{ user_addon_connections|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">MCP Configs</span>
+                    <span class="metric-value">{{ total_mcp_configs|default:0 }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Spaces Created</span>
+                    <span class="metric-value">{{ total_spaces|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(245, 245, 247, 0.1)' },
+                ticks: { color: 'rgba(245, 245, 247, 0.5)', font: { size: 10, family: "system-ui, sans-serif" } }
+            },
+            y: {
+                grid: { color: 'rgba(245, 245, 247, 0.1)' },
+                ticks: { color: 'rgba(245, 245, 247, 0.5)', font: { size: 10, family: "system-ui, sans-serif" } },
+                beginAtZero: true
+            }
+        }
+    };
+
+    // Conversations Chart - Zen Blue
+    new Chart(document.getElementById('conversationsChart'), {
+        type: 'line',
+        data: {
+            labels: {{ conv_chart_labels| safe }},
+        datasets: [{
+            data: {{ conv_chart_data| safe }},
+        borderColor: '#6287f5',
+        backgroundColor: 'rgba(237, 237, 237, 0.15)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#6287f5',
+        pointBorderColor: '#1f1f1f',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+            }]
+        },
+        options: chartDefaults
+    });
+
+    // Tasks Chart - Zen Coral
+    new Chart(document.getElementById('tasksChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ task_chart_labels| safe }},
+        datasets: [{
+            data: {{ task_chart_data| safe }},
+        backgroundColor: 'rgba(237, 237, 237, 0.6)',
+        borderColor: '#F76F53',
+        borderWidth: 1,
+        borderRadius: 4,
+            }]
+        },
+        options: chartDefaults
+    });
+
+    // Conversation Status Doughnut - Zen semantic colors
+    new Chart(document.getElementById('convStatusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Running', 'Error'],
+            datasets: [{
+                data: [{{ completed_conversations }}, {{ ongoing_conversations }}, {{ error_conversations }}],
+        backgroundColor: ['#63f78b', '#6287f5', '#F76F53'],
+        borderColor: '#1f1f1f',
+        borderWidth: 2
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: 'rgba(245, 245, 247, 0.6)', padding: 12, font: { size: 10, family: "ui-monospace, monospace" }, usePointStyle: true }
+            }
+        }
+    }
+    });
+
+    // Plans Chart - Zen Green variants
+    new Chart(document.getElementById('plansChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ plan_labels| safe }},
+        datasets: [{
+            data: {{ plan_data| safe }},
+        backgroundColor: ['#63f78b', '#7af99e', '#91fab1', '#a8fcc4'],
+        borderColor: '#1f1f1f',
+        borderWidth: 2
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: 'rgba(245, 245, 247, 0.6)', padding: 12, font: { size: 10, family: "ui-monospace, monospace" }, usePointStyle: true }
+            }
+        }
+    }
+    });
+
+    // Providers Chart - Zen Coral variants
+    new Chart(document.getElementById('providersChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ provider_labels| safe }},
+        datasets: [{
+            data: {{ provider_data| safe }},
+        backgroundColor: ['#F76F53', '#f98a73', '#faa593', '#fcc0b3', '#fddbd3'],
+        borderColor: '#1f1f1f',
+        borderWidth: 2
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: 'rgba(245, 245, 247, 0.6)', padding: 12, font: { size: 10, family: "ui-monospace, monospace" }, usePointStyle: true }
+            }
+        }
+    }
+    });
+</script>
+{% endblock %}

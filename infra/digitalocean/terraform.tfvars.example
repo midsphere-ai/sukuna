@@ -1,0 +1,122 @@
+# =============================================================================
+# Terraform Variables Example
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in the values.
+# DO NOT commit terraform.tfvars to version control!
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Required Variables
+# -----------------------------------------------------------------------------
+
+# DigitalOcean API token (required)
+do_token = ""
+
+# Flower authentication (required)
+flower_user     = ""
+flower_password = ""
+
+# -----------------------------------------------------------------------------
+# Optional: Region & Project
+# -----------------------------------------------------------------------------
+
+# region       = "blr1"
+# project_name = "midsphere"
+# environment  = "production"
+
+# -----------------------------------------------------------------------------
+# Optional: Domain Configuration
+# -----------------------------------------------------------------------------
+
+# domain  = "midsphere.ai"
+# dns_ttl = 300
+
+# -----------------------------------------------------------------------------
+# Optional: Container Registry
+# -----------------------------------------------------------------------------
+
+# registry_name = "midsphere-production"
+
+# -----------------------------------------------------------------------------
+# Optional: Django Main Configuration
+# -----------------------------------------------------------------------------
+
+# django_main_count = 2
+# django_main_size  = "s-2vcpu-4gb"
+# django_main_port  = 8000
+
+# -----------------------------------------------------------------------------
+# Optional: Django Channels Configuration
+# -----------------------------------------------------------------------------
+
+# django_channels_count = 1
+# django_channels_size  = "s-1vcpu-2gb"
+# django_channels_port  = 8001
+
+# -----------------------------------------------------------------------------
+# Optional: Celery Configuration
+# -----------------------------------------------------------------------------
+
+# celery_beat_size          = "s-1vcpu-1gb"
+# celery_worker_count       = 2
+# celery_worker_size        = "s-1vcpu-2gb"
+# celery_worker_concurrency = 4
+
+# -----------------------------------------------------------------------------
+# Optional: Flower Configuration
+# -----------------------------------------------------------------------------
+
+# flower_size = "s-1vcpu-1gb"
+# flower_port = 5555
+
+# IP whitelist for Flower access (CIDR notation)
+# flower_allowed_ips = ["1.2.3.4/32", "5.6.7.8/32"]
+
+# -----------------------------------------------------------------------------
+# Optional: Kubernetes / ARQ Configuration
+# -----------------------------------------------------------------------------
+
+# k8s_version    = "1.29"
+# k8s_node_size  = "s-4vcpu-8gb"
+# k8s_node_min   = 1
+# k8s_node_max   = 3
+
+# arq_replicas       = 12
+# arq_min_replicas   = 5
+# arq_max_replicas   = 36
+# arq_memory_request = "400Mi"
+# arq_memory_limit   = "512Mi"
+# arq_cpu_request    = "200m"
+# arq_cpu_limit      = "500m"
+
+# -----------------------------------------------------------------------------
+# Optional: Monitoring Configuration
+# -----------------------------------------------------------------------------
+
+# Email addresses for alerts
+# alert_emails = ["ops@midsphere.ai", "devops@midsphere.ai"]
+
+# Alert thresholds
+# cpu_alert_threshold    = 80
+# memory_alert_threshold = 85
+# disk_alert_threshold   = 90
+
+# -----------------------------------------------------------------------------
+# Optional: SSH Configuration
+# -----------------------------------------------------------------------------
+
+# SSH key IDs or fingerprints for droplet access
+# ssh_keys = ["12345678", "ab:cd:ef:..."]
+
+# -----------------------------------------------------------------------------
+# Optional: Vault Configuration
+# -----------------------------------------------------------------------------
+
+# vault_addr  = "https://vault.example.com:8200"
+# vault_token = ""  # Your Vault authentication token
+
+# -----------------------------------------------------------------------------
+# Optional: Additional Tags
+# -----------------------------------------------------------------------------
+
+# common_tags = ["team:platform", "managed-by:terraform"]

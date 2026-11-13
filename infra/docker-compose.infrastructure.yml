@@ -1,0 +1,42 @@
+version: "3.8"
+
+# Standalone Vault Docker Compose
+# Used by the setup_infrastructure.sh script
+
+services:
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: vault
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+      - "8201:8201"
+    volumes:
+      - vault-data:/vault/data
+      - vault-logs:/vault/logs
+      - ./vault-config:/vault/config:ro
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_API_ADDR: "http://0.0.0.0:8200"
+    command: server -config=/vault/config/vault.hcl
+    healthcheck:
+      test: ["CMD-SHELL", "vault status -address=http://127.0.0.1:8200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - infrastructure
+
+networks:
+  infrastructure:
+    name: infrastructure-network
+    driver: bridge
+
+volumes:
+  vault-data:
+    name: vault-data
+  vault-logs:
+    name: vault-logs

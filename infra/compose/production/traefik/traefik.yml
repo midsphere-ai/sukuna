@@ -1,0 +1,90 @@
+log:
+  level: INFO
+
+entryPoints:
+  web:
+    # http
+    address: ':80'
+    http:
+      # https://doc.traefik.io/traefik/routing/entrypoints/#entrypoint
+      redirections:
+        entryPoint:
+          to: web-secure
+
+  web-secure:
+    # https
+    address: ':443'
+
+  flower:
+    address: ':5555'
+
+certificatesResolvers:
+  letsencrypt:
+    # https://doc.traefik.io/traefik/https/acme/#lets-encrypt
+    acme:
+      email: 'admin@example.com'
+      storage: /etc/traefik/acme/acme.json
+      # https://doc.traefik.io/traefik/https/acme/#httpchallenge
+      httpChallenge:
+        entryPoint: web
+
+http:
+  routers:
+    # API routes → Django backend
+    api-router:
+      rule: '(Host(`midsphere.ai`) || Host(`www.midsphere.ai`)) && (PathPrefix(`/api/`) || PathPrefix(`/admin/`) || PathPrefix(`/static/`) || PathPrefix(`/authentication/`) || PathPrefix(`/workspace/`) || PathPrefix(`/chat/completions/`) || PathPrefix(`/memory/`) || PathPrefix(`/billing/`) || PathPrefix(`/cms/`))'
+      entryPoints:
+        - web-secure
+      middlewares:
+        - csrf
+      service: django
+      priority: 20
+      tls:
+        certResolver: letsencrypt
+
+    # Everything else → SvelteKit frontend
+    web-secure-router:
+      rule: 'Host(`midsphere.ai`) || Host(`www.midsphere.ai`)'
+      entryPoints:
+        - web-secure
+      service: web
+      priority: 10
+      tls:
+        certResolver: letsencrypt
+
+    flower-secure-router:
+      rule: 'Host(`midsphere.ai`)'
+      entryPoints:
+        - flower
+      service: flower
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    csrf:
+      # https://doc.traefik.io/traefik/master/middlewares/http/headers/#hostsproxyheaders
+      # https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
+      headers:
+        hostsProxyHeaders: ['X-CSRFToken']
+
+  services:
+    django:
+      loadBalancer:
+        servers:
+          - url: http://django:5000
+
+    web:
+      loadBalancer:
+        servers:
+          - url: http://web:3000
+
+    flower:
+      loadBalancer:
+        servers:
+          - url: http://flower:5555
+
+providers:
+  # https://doc.traefik.io/traefik/master/providers/file/
+  file:
+    filename: /etc/traefik/traefik.yml
+    watch: true

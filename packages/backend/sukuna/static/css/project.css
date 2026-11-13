@@ -1,0 +1,120 @@
+/* Jatayu AI — shared backend CSS.
+ * Matches docs/design-system.md. Dark-mode-first, monochrome.
+ * Loaded by django-unfold and by sukuna/templates/base.html. */
+
+:root {
+	/* Dark mode (default). */
+	--bg: #0B0B0C;
+	--surface: #111113;
+	--surface-2: #151517;
+	--text-primary: #F5F5F7;
+	--text-secondary: #CDCDD3;
+	--text-tertiary: #96969E;
+	--accent: #EDEDED;
+	--success: #6EE7B7;
+	--error: #FF6B6B;
+	--warning: #FACC15;
+	--on-accent: #0B0B0C;
+	--hairline: rgba(245, 245, 247, 0.08);
+	--hairline-strong: rgba(245, 245, 247, 0.14);
+
+	--font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Light-mode mirror. Triggered by data-theme="light" on <html>. */
+[data-theme='light'] {
+	--bg: #FFFFFF;
+	--surface: #F5F6F8;
+	--surface-2: #ECEEF1;
+	--text-primary: #202124;
+	--text-secondary: #3A3D43;
+	--text-tertiary: #64666C;
+	--accent: #1A1A1C;
+	--on-accent: #FFFFFF;
+	--hairline: rgba(26, 26, 28, 0.08);
+	--hairline-strong: rgba(26, 26, 28, 0.14);
+}
+
+/* Base styles. */
+body {
+	font-family: var(--font-sans);
+	background-color: var(--bg);
+	color: var(--text-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+code,
+pre,
+kbd,
+samp,
+.font-mono {
+	font-family: var(--font-mono);
+}
+
+/* Alert styles — map to Jatayu status colours. */
+.alert-debug {
+	color: var(--text-secondary);
+	background-color: var(--surface);
+	border: 1px solid var(--hairline);
+}
+
+.alert-error {
+	color: var(--error);
+	background-color: rgba(255, 107, 107, 0.08);
+	border: 1px solid rgba(255, 107, 107, 0.24);
+}
+
+.alert-success {
+	color: var(--success);
+	background-color: rgba(110, 231, 183, 0.08);
+	border: 1px solid rgba(110, 231, 183, 0.24);
+}
+
+.alert-warning {
+	color: var(--warning);
+	background-color: rgba(250, 204, 21, 0.08);
+	border: 1px solid rgba(250, 204, 21, 0.24);
+}
+
+.alert-info {
+	color: var(--accent);
+	background-color: var(--surface);
+	border: 1px solid var(--hairline-strong);
+}
+
+/* Utility classes (new Jatayu vocabulary). */
+.text-foreground { color: var(--text-primary); }
+.text-muted { color: var(--text-secondary); }
+.text-subtle { color: var(--text-tertiary); }
+.text-accent { color: var(--accent); }
+.text-success { color: var(--success); }
+.text-error { color: var(--error); }
+.text-warning { color: var(--warning); }
+
+.bg-background { background-color: var(--bg); }
+.bg-surface { background-color: var(--surface); }
+.bg-surface-2 { background-color: var(--surface-2); }
+.bg-accent { background-color: var(--accent); color: var(--on-accent); }
+
+.border-default { border-color: var(--hairline); }
+.border-strong { border-color: var(--hairline-strong); }
+
+/* Legacy zen-* aliases (backward compat during rollout). */
+.text-zen-paper { color: var(--bg); }
+.text-zen-dark { color: var(--text-primary); }
+.text-zen-coral { color: var(--accent); }
+.text-zen-blue { color: var(--accent); }
+.text-zen-green { color: var(--success); }
+
+.bg-zen-paper { background-color: var(--bg); }
+.bg-zen-dark { background-color: var(--text-primary); color: var(--on-accent); }
+.bg-zen-muted { background-color: var(--surface); }
+.bg-zen-subtle { background-color: var(--surface-2); }
+.bg-zen-coral { background-color: var(--accent); }
+.bg-zen-blue { background-color: var(--accent); }
+.bg-zen-green { background-color: var(--success); }
+
+.border-zen-subtle { border-color: var(--hairline); }
+.border-zen-muted { border-color: var(--hairline); }

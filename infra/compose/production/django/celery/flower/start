@@ -1,0 +1,51 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Use Python wrapper to load vault secrets before starting Flower
+exec uv run python -c "
+import os
+import subprocess
+import sys
+import time
+
+from config.openbao import load_env_from_vault
+
+# Load environment variables from vault first
+load_env_from_vault()
+
+# Wait for celery workers to be available
+max_retries = 30
+for i in range(max_retries):
+    result = subprocess.run(
+        ['uv', 'run', 'celery', '-A', 'config.celery_app', 'inspect', 'ping'],
+        capture_output=True,
+        timeout=10
+    )
+    if result.returncode == 0:
+        break
+    print('Celery workers not available, retrying...', file=sys.stderr)
+    time.sleep(2)
+
+print('Starting flower')
+
+# Get the vault-loaded environment variables
+redis_url = os.environ.get('CELERY_REDIS_URL', os.environ.get('REDIS_URL', ''))
+flower_user = os.environ.get('CELERY_FLOWER_USER', '')
+flower_password = os.environ.get('CELERY_FLOWER_PASSWORD', '')
+
+if not redis_url:
+    print('ERROR: REDIS_URL or CELERY_REDIS_URL not set after vault loading', file=sys.stderr)
+    sys.exit(1)
+
+# Start flower with the loaded credentials
+os.execvp('uv', [
+    'uv', 'run', 'celery',
+    '-A', 'config.celery_app',
+    '-b', redis_url,
+    'flower',
+    '--basic_auth=' + flower_user + ':' + flower_password
+])
+"

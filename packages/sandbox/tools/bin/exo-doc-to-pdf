@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""Convert a Word document (.docx / .doc / .odt / .rtf) to PDF using LibreOffice headless.
+
+Usage:
+    exo-doc-to-pdf INPUT [OUTPUT]
+
+If OUTPUT is omitted, the PDF is written next to INPUT with a .pdf extension.
+"""
+from __future__ import annotations
+
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ALLOWED_SUFFIXES = {".docx", ".doc", ".odt", ".rtf"}
+
+
+def fail(msg: str, code: int = 1) -> None:
+    print(f"error: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in {"-h", "--help"}:
+        print(__doc__)
+        sys.exit(0 if args else 2)
+
+    src = Path(args[0]).expanduser().resolve()
+    if not src.is_file():
+        fail(f"input not found: {src}")
+    if src.suffix.lower() not in ALLOWED_SUFFIXES:
+        fail(f"expected one of {sorted(ALLOWED_SUFFIXES)}, got {src.suffix}")
+
+    dst = Path(args[1]).expanduser().resolve() if len(args) > 1 else src.with_suffix(".pdf")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+
+    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice:
+        fail("libreoffice (soffice) not found on PATH")
+
+    with tempfile.TemporaryDirectory(prefix="exo-doc-pdf-") as tmp:
+        proc = subprocess.run(
+            [soffice, "--headless", "--norestore", "--nologo",
+             "--convert-to", "pdf", "--outdir", tmp, str(src)],
+            capture_output=True, text=True,
+        )
+        if proc.returncode != 0:
+            fail(f"libreoffice failed: {proc.stderr.strip() or proc.stdout.strip()}")
+
+        produced = Path(tmp) / (src.stem + ".pdf")
+        if not produced.is_file():
+            fail(f"libreoffice produced no output in {tmp}")
+        shutil.move(str(produced), str(dst))
+
+    print(str(dst))
+
+
+if __name__ == "__main__":
+    main()

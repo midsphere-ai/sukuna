@@ -1,0 +1,20 @@
+"apiVersion": "keda.sh/v1alpha1"
+"kind": "ScaledObject"
+"metadata":
+  "name": "arq-workers-scaler"
+  "namespace": "agent-platform"
+"spec":
+  "cooldownPeriod": 60
+  "maxReplicaCount": 36
+  "minReplicaCount": 5
+  "pollingInterval": 10
+  "scaleTargetRef":
+    "name": "arq-workers"
+  "triggers":
+  - "authenticationRef":
+      "name": "arq-redis-auth"
+    "metadata":
+      "addressFromEnv": "REDIS_URL"
+      "listLength": "3"
+      "listName": "arq:queue"
+    "type": "redis"

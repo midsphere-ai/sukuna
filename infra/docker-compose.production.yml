@@ -1,0 +1,68 @@
+volumes:
+  production_postgres_data_backups: {}
+  production_traefik: {}
+
+services:
+  django: &django
+    build:
+      context: ..
+      dockerfile: ./infra/compose/production/django/Dockerfile
+    image: sukuna_production_django
+    env_file:
+      - ../packages/backend/.env
+    command: /start
+
+  web:
+    build:
+      context: ..
+      dockerfile: ./infra/compose/production/frontend/Dockerfile
+    image: sukuna_production_web
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ORIGIN=https://midsphere.ai
+
+  traefik:
+    build:
+      context: ..
+      dockerfile: ./infra/compose/production/traefik/Dockerfile
+    image: sukuna_production_traefik
+    depends_on:
+      - django
+      - web
+    volumes:
+      - production_traefik:/etc/traefik/acme
+    ports:
+      - '0.0.0.0:80:80'
+      - '0.0.0.0:443:443'
+      - '0.0.0.0:5555:5555'
+
+  celeryworker:
+    <<: *django
+    image: sukuna_production_celeryworker
+    command: /start-celeryworker
+    env_file:
+      - ../packages/backend/.env
+
+  celerybeat:
+    <<: *django
+    image: sukuna_production_celerybeat
+    command: /start-celerybeat
+    env_file:
+      - ../packages/backend/.env
+
+  flower:
+    <<: *django
+    image: sukuna_production_flower
+    command: /start-flower
+    env_file:
+      - ../packages/backend/.env
+
+  awscli:
+    build:
+      context: ..
+      dockerfile: ./infra/compose/production/aws/Dockerfile
+    env_file:
+      - ../packages/backend/.env
+    volumes:
+      - production_postgres_data_backups:/backups:z

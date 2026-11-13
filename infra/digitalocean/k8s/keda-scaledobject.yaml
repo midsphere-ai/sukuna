@@ -1,0 +1,63 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: arq-workers-scaler
+  namespace: agent-platform
+spec:
+  scaleTargetRef:
+    name: arq-workers
+  
+  # Polling configuration
+  pollingInterval: 10       # Check queue every 10 seconds
+  cooldownPeriod: 60        # Wait 60 seconds before scaling down
+  
+  # Replica limits
+  minReplicaCount: 5        # Minimum 5 pods always running
+  maxReplicaCount: 36       # Maximum 36 pods (3 nodes × 12 workers)
+  
+  # Advanced scaling behavior
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 120
+          policies:
+            - type: Percent
+              value: 10
+              periodSeconds: 60
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+            - type: Pods
+              value: 4
+              periodSeconds: 15
+          selectPolicy: Max
+  
+  triggers:
+    # Scale based on Redis queue length
+    - type: redis
+      metadata:
+        # Redis list key for ARQ queue
+        listName: "arq:queue"
+        # Scale 1 worker per 3 jobs in queue
+        listLength: "3"
+        # Connection configuration
+        enableTLS: "false"
+        databaseIndex: "0"
+      authenticationRef:
+        name: arq-redis-auth
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: arq-redis-auth
+  namespace: agent-platform
+spec:
+  secretTargetRef:
+    - parameter: address
+      name: arq-secrets
+      key: ARQ_REDIS_URL

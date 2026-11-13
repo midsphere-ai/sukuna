@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#0B0B0C" />
+		<title>500 — Something went wrong — Jatayu AI</title>
+		<style>
+			* { margin: 0; padding: 0; box-sizing: border-box; }
+			:root {
+				--bg: #0B0B0C;
+				--surface-2: #151517;
+				--text-primary: #F5F5F7;
+				--text-secondary: #9A9AA0;
+				--accent: #EDEDED;
+				--on-accent: #0B0B0C;
+				--hairline: rgba(245, 245, 247, 0.14);
+			}
+			@media (prefers-color-scheme: light) {
+				:root {
+					--bg: #FFFFFF;
+					--surface-2: #ECEEF1;
+					--text-primary: #202124;
+					--text-secondary: #5F6368;
+					--accent: #1A1A1C;
+					--on-accent: #FFFFFF;
+					--hairline: rgba(26, 26, 28, 0.14);
+				}
+			}
+			body {
+				font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+				font-weight: 400;
+				background: var(--bg);
+				color: var(--text-primary);
+				display: flex;
+				min-height: 100vh;
+				align-items: center;
+				justify-content: center;
+				padding: 1rem;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
+			}
+			.c { max-width: 24rem; width: 100%; text-align: center; }
+			.code {
+				font-size: clamp(5rem, 15vw, 8rem);
+				font-weight: 500;
+				letter-spacing: -0.05em;
+				line-height: 1;
+				opacity: 0.08;
+			}
+			h1 { margin-top: 1rem; font-size: 1.125rem; font-weight: 500; letter-spacing: -0.02em; }
+			.desc { margin-top: 0.375rem; font-size: 0.875rem; line-height: 1.6; color: var(--text-secondary); }
+			.actions { margin-top: 2rem; display: flex; gap: 0.5rem; justify-content: center; }
+			.btn {
+				display: inline-flex; align-items: center; padding: 0.5rem 1rem;
+				border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500;
+				text-decoration: none; border: 1px solid transparent; cursor: pointer;
+				transition: background 120ms ease-out, border-color 120ms ease-out;
+				font-family: inherit;
+			}
+			.btn-fill { background: var(--accent); color: var(--on-accent); }
+			.btn-fill:hover { background: var(--text-primary); }
+			.btn-outline {
+				background: transparent;
+				color: var(--text-primary);
+				border-color: var(--hairline);
+			}
+			.btn-outline:hover { background: var(--surface-2); }
+		</style>
+	</head>
+	<body>
+		<div class="c">
+			<p class="code">500</p>
+			<h1>Something went wrong</h1>
+			<p class="desc">Our servers hit a snag. Try again in a moment.</p>
+			<div class="actions">
+				<button class="btn btn-fill" onclick="window.location.reload()">Try again</button>
+				<a class="btn btn-outline" href="/">Go home</a>
+			</div>
+		</div>
+	</body>
+</html>

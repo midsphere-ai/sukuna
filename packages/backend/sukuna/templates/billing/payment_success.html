@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0B0B0C">
+    <title>Payment Successful · Jatayu AI</title>
+    <style>
+        :root {
+            --bg: #0B0B0C;
+            --surface: #111113;
+            --surface-2: #151517;
+            --text-primary: #F5F5F7;
+            --text-secondary: #9A9AA0;
+            --text-tertiary: #5A5A60;
+            --accent: #EDEDED;
+            --success: #6EE7B7;
+            --error: #FF6B6B;
+            --warning: #FACC15;
+            --on-accent: #0B0B0C;
+            --hairline: rgba(245, 245, 247, 0.08);
+            --hairline-strong: rgba(245, 245, 247, 0.14);
+
+            --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .success-container {
+            background: var(--surface);
+            border: 1px solid var(--hairline);
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--surface-2);
+            border: 1px solid var(--hairline-strong);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: scaleUp 0.5s ease-out 0.2s both;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .success-icon svg {
+            width: 32px;
+            height: 32px;
+            color: var(--success);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            text-decoration: none;
+            display: inline-block;
+            transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--on-accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--text-primary);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border-color: var(--hairline-strong);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-2);
+        }
+
+        .details {
+            background: var(--surface-2);
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--hairline);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 13px;
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+
+        <h1>Payment successful</h1>
+        <p>Your subscription is active. Thanks for supporting Jatayu AI.</p>
+
+        {% if subscription %}
+        <div class="details">
+            <div class="detail-row">
+                <span class="detail-label">Plan</span>
+                <span class="detail-value">{{ subscription.plan.name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount</span>
+                <span class="detail-value">{{ subscription.plan.price }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value">{{ subscription.status|title }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Valid until</span>
+                <span class="detail-value">{{ subscription.end_date|date:"M d, Y" }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="button-group">
+            <a href="/dashboard/" class="btn btn-primary">Go to dashboard</a>
+            <a href="/subscription/history/" class="btn btn-secondary">Payment history</a>
+        </div>
+    </div>
+</body>
+</html>

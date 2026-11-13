@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Production environment validation
+if [ -z "${VAULT_ADDR:-}" ]; then
+    echo "ERROR: VAULT_ADDR is not set"
+    exit 1
+fi
+
+if [ -z "${VAULT_TOKEN:-}" ]; then
+    echo "ERROR: VAULT_TOKEN is not set"
+    exit 1
+fi
+
+if [ -z "${DJANGO_SETTINGS_MODULE:-}" ]; then
+    export DJANGO_SETTINGS_MODULE="config.settings.production"
+    echo "WARNING: DJANGO_SETTINGS_MODULE not set, defaulting to config.settings.production"
+fi
+
+echo "Vault configuration verified: VAULT_ADDR is set"
+
+exec "$@"

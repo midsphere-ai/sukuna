@@ -1,0 +1,10 @@
+"apiVersion": "keda.sh/v1alpha1"
+"kind": "TriggerAuthentication"
+"metadata":
+  "name": "arq-redis-auth"
+  "namespace": "agent-platform"
+"spec":
+  "secretTargetRef":
+  - "key": "REDIS_URL"
+    "name": "arq-secrets"
+    "parameter": "address"

@@ -1,0 +1,1173 @@
+@import 'tailwindcss';
+
+/* ──────────────────────────────────────────────────────────────
+ * Jatayu AI design system
+ * Dark-mode-first, monochrome, terminal/code-editor feel.
+ * Canonical spec: docs/design-system.md.
+ *
+ * Tokens are declared once in `:root` (dark = default). The
+ * light-mode mirror lives under `[data-theme='light']`. The
+ * pre-paint resolver in app.html sets data-theme to "dark" or
+ * "light" so component-level `[data-theme='dark']` selectors in
+ * the animation blocks below continue to match.
+ *
+ * Fonts: Inter Tight (primary, via @fontsource/inter-tight imported in
+ * +layout.svelte) + JetBrains Mono (primary mono, via
+ * @fontsource/jetbrains-mono). Berkeley Mono kept as a local fallback
+ * for terminals that already had it pre-deployed.
+ * ──────────────────────────────────────────────────────────────*/
+
+/* ── Raw spec tokens (dark = default) ── */
+:root {
+	--bg: #0b0b0c;
+	--surface: #111113;
+	--surface-2: #151517;
+	--text-primary: #f5f5f7;
+	--text-secondary: #cdcdd3;
+	--text-tertiary: #96969e;
+	--accent: #ededed;
+	--success: #6ee7b7;
+	--error: #ff6b6b;
+	--warning: #facc15;
+
+	/* Text colour that sits on top of the accent block. Accent is
+	   near-white in dark mode, so foreground inverts to near-black. */
+	--on-accent: #0b0b0c;
+
+	/* Semi-transparent fills derived from text-primary — used for
+	   hairlines, hover states, dividers. */
+	--hairline: rgba(245, 245, 247, 0.08);
+	--hairline-strong: rgba(245, 245, 247, 0.14);
+	--overlay: rgba(0, 0, 0, 0.4);
+
+	/* Spacing */
+	--space-1: 2px;
+	--space-2: 4px;
+	--space-3: 8px;
+	--space-4: 12px;
+	--space-5: 16px;
+	--space-6: 20px;
+	--space-7: 24px;
+	--space-8: 32px;
+	--space-9: 40px;
+	--space-10: 48px;
+	--space-11: 64px;
+
+	/* Radii */
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+	--radius-xl: 12px;
+	--radius-2xl: 16px;
+	--radius-full: 9999px;
+
+	/* No drop shadows per spec — surfaces are separated by borders only.
+	   `--shadow-*` tokens are border rings so legacy class references still
+	   resolve to a subtle hairline, never a soft drop shadow. */
+	--shadow-sm: 0 0 0 1px var(--hairline);
+	--shadow-md: 0 0 0 1px var(--hairline-strong);
+	--shadow-lg: 0 0 0 1px var(--hairline-strong);
+	--shadow-xl: 0 0 0 1px var(--hairline-strong);
+	--shadow-focus: 0 0 0 2px var(--accent);
+
+	/* Transitions — spec: 120–220 ms, ease-in-out, no bouncing. */
+	--transition-fast: 120ms ease-in-out;
+	--transition-default: 160ms ease-in-out;
+	--transition-slow: 220ms ease-in-out;
+	--transition-page: 160ms ease-in-out;
+	--ease-out: cubic-bezier(0.42, 0, 0.58, 1);
+	--ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+	/* No elastic/spring easings per spec. Alias kept to avoid crashes in
+	   any component still referencing --ease-spring; maps to plain ease-in-out. */
+	--ease-spring: cubic-bezier(0.42, 0, 0.58, 1);
+
+	/* Layout constants */
+	--sidebar-collapsed: 48px;
+	--sidebar-expanded: 240px;
+	--header-height: 56px;
+	--chat-panel-min: 40%;
+	--workspace-panel-min: 40%;
+	--input-min-height: 46px;
+
+	/* ── Compatibility shim (TODO: remove after Stage B codemod) ──
+	 * Legacy Midsphere token names mapped to new Jatayu values so
+	 * existing components keep compiling during migration. Utilities
+	 * like bg-paper, bg-elevated, text-coral will be renamed to the
+	 * new vocabulary (bg-background, bg-surface-2, text-accent) in
+	 * the Phase 2 codemod. */
+	--ms-paper: var(--bg);
+	--ms-dark: var(--text-primary);
+	--ms-heading: var(--text-primary);
+	--ms-sidebar: var(--surface-2);
+	--ms-surface: var(--surface);
+	--ms-elevated: var(--surface-2);
+	--ms-accent: var(--accent);
+	--ms-coral: var(--accent);
+	--ms-blue: var(--accent);
+	--ms-green: var(--success);
+	--ms-panel-dark: var(--surface-2);
+	--ms-muted: var(--hairline);
+	--ms-subtle: var(--hairline-strong);
+	--ms-border: var(--hairline);
+	--ms-border-subtle: var(--hairline);
+	--ms-border-strong: var(--hairline-strong);
+	--ms-active: var(--hairline-strong);
+	--ms-danger: var(--error);
+	--ms-warning: var(--warning);
+	--ms-muted-text: var(--text-secondary);
+	--ms-subtle-text: var(--text-tertiary);
+	--ms-deep-olive: var(--surface-2);
+	--ms-posthog-orange: var(--accent);
+	--ms-amber-gold: var(--warning);
+	--ms-warm-tan: var(--hairline-strong);
+	--ms-hover-white: var(--hairline-strong);
+	--ms-sage-border: var(--hairline-strong);
+	--ms-light-border: var(--hairline);
+	--ms-olive-ink: var(--text-secondary);
+	--ms-font-sans: var(--font-sans);
+	--ms-font-display: var(--font-sans);
+	--ms-font-mono: var(--font-mono);
+
+	/* Feature-card palette (product-specific, not in spec) — collapsed
+	   to a monochrome+accent system so feature cards read as neutral
+	   tiles with a single accent highlight. */
+	--feature-research: var(--accent);
+	--feature-research-light: var(--text-primary);
+	--feature-research-dark: var(--text-secondary);
+	--feature-research-accent: var(--hairline-strong);
+	--feature-builder: var(--text-secondary);
+	--feature-builder-light: var(--text-primary);
+	--feature-builder-dark: var(--text-tertiary);
+	--feature-builder-accent: var(--hairline);
+	--feature-automation: var(--success);
+	--feature-automation-light: var(--success);
+	--feature-automation-dark: var(--success);
+	--feature-automation-accent: var(--hairline);
+	--feature-integrations: var(--text-secondary);
+	--feature-integrations-light: var(--text-primary);
+	--feature-integrations-dark: var(--text-tertiary);
+	--feature-integrations-accent: var(--hairline);
+	--feature-sandbox: var(--surface-2);
+	--feature-sandbox-light: var(--surface);
+	--feature-sandbox-dark: var(--bg);
+	--feature-sandbox-accent: var(--hairline);
+
+	/* Phase / agent status tokens (product-specific). */
+	--phase-planning: var(--accent);
+	--phase-coding: var(--success);
+	--phase-testing: var(--warning);
+	--phase-deploying: var(--success);
+
+	--status-working: var(--accent);
+	--status-thinking: var(--text-secondary);
+	--status-waiting: var(--warning);
+	--status-complete: var(--success);
+	--status-error: var(--error);
+
+	/* Legacy on-accent + accent aliases. */
+	--fg-on-accent: var(--on-accent);
+	--accent-coral: var(--accent);
+	--accent-mid-blue: var(--accent);
+	--accent-mid-green: var(--success);
+	--accent-primary: var(--accent);
+	--accent-positive: var(--success);
+	--accent-negative: var(--error);
+	--accent-warning: var(--warning);
+	--accent-info: var(--accent);
+	--accent-agent: var(--accent);
+
+	/* Component-specific legacy. */
+	--input-bg: var(--surface);
+	--tooltip-bg: var(--surface-2);
+	--tooltip-text: var(--text-primary);
+}
+
+/* ── Light-mode mirror ── */
+[data-theme='light'] {
+	--bg: #ffffff;
+	--surface: #f5f6f8;
+	--surface-2: #eceef1;
+	--text-primary: #202124;
+	--text-secondary: #3a3d43;
+	--text-tertiary: #64666c;
+	--accent: #1a1a1c;
+
+	/* Light-mode status variants — darker hues for sufficient contrast
+	   on light surfaces (per spec §17). */
+	--success: #0f9d58;
+	--error: #b31424;
+	--warning: #c66c00;
+
+	/* Light-mode accent is near-black; on-accent text inverts. */
+	--on-accent: #ffffff;
+
+	/* Hairlines on light surfaces use semi-transparent black. */
+	--hairline: rgba(26, 26, 28, 0.08);
+	--hairline-strong: rgba(26, 26, 28, 0.14);
+	--overlay: rgba(0, 0, 0, 0.1);
+
+	--fg-on-accent: var(--on-accent);
+	--input-bg: var(--surface);
+	--tooltip-bg: var(--text-primary);
+	--tooltip-text: var(--bg);
+}
+
+/* ── Tailwind v4 @theme — utility-friendly aliases ── */
+@theme {
+	/* Desktop layout triggers at 768px instead of 1024px. */
+	--breakpoint-lg: 768px;
+
+	--font-sans:
+		'Inter Tight', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	--font-display:
+		'Inter Tight', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	--font-mono:
+		'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+		'Liberation Mono', 'Courier New', monospace;
+
+	--text-sm: 1rem;
+	--text-sm--line-height: calc(1.25 / 1);
+
+	/* Surfaces (Jatayu vocabulary) */
+	--color-background: var(--bg);
+	--color-surface: var(--surface);
+	--color-surface-2: var(--surface-2);
+
+	/* Text (Jatayu vocabulary) */
+	--color-foreground: var(--text-primary);
+	--color-muted: var(--text-secondary);
+	--color-subtle: var(--text-tertiary);
+
+	/* Borders (Jatayu vocabulary) */
+	--color-border: var(--hairline);
+	--color-border-subtle: var(--hairline);
+	--color-border-strong: var(--hairline-strong);
+	--color-active: var(--hairline-strong);
+
+	/* Semantic (Jatayu vocabulary) */
+	--color-accent: var(--accent);
+	--color-success: var(--success);
+	--color-error: var(--error);
+	--color-warning: var(--warning);
+
+	/* ── Legacy utility names (compat shim, TODO: remove after codemod) ── */
+	--color-paper: var(--bg);
+	--color-sidebar: var(--surface-2);
+	--color-elevated: var(--surface-2);
+	--color-overlay: var(--surface-2);
+	--color-panel-dark: var(--surface-2);
+	--color-dark: var(--text-primary);
+	--color-coral: var(--accent);
+	--color-mid-blue: var(--accent);
+	--color-mid-green: var(--success);
+	--color-posthog-orange: var(--accent);
+	--color-deep-olive: var(--text-secondary);
+	--color-warm-tan: var(--hairline-strong);
+	--color-hover-white: var(--hairline-strong);
+	--color-amber-gold: var(--warning);
+	--color-danger: var(--error);
+	--color-info: var(--accent);
+	--color-agent: var(--accent);
+	--color-terminal-header: var(--surface);
+	--color-terminal-body: var(--bg);
+	--color-code-bg: var(--surface-2);
+
+	/* Radii (Tailwind utility scale matches :root). */
+	--radius-xl: 12px;
+	--radius-2xl: 16px;
+}
+
+/* ── Theme-aware logo visibility ──
+ * Dark is default. The logo-dark asset (white mark) is shown first.
+ * Light theme swaps to logo-light (dark mark). */
+.logo-light {
+	display: none;
+}
+.logo-dark {
+	display: block;
+}
+[data-theme='light'] .logo-light {
+	display: block;
+}
+[data-theme='light'] .logo-dark {
+	display: none;
+}
+
+/* ── Collapsed canvas: center chat content, keep header full-width ── */
+[data-editor-collapsed] > .chat-main {
+	width: 100%;
+	max-width: 42rem;
+	margin-inline: auto;
+}
+
+/* ── Skip-to-content ── */
+.skip-to-content {
+	position: absolute;
+	left: -9999px;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	z-index: 9999;
+	padding: 8px 16px;
+	background: var(--accent);
+	color: var(--on-accent);
+	font-size: 14px;
+	font-weight: 500;
+	border-radius: 0 0 8px 0;
+	text-decoration: none;
+}
+
+.skip-to-content:focus {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: auto;
+	height: auto;
+	overflow: visible;
+}
+
+/* ── Focus-visible — accent ring, no coloured halo ── */
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	:focus:not(:focus-visible) {
+		outline: none;
+	}
+}
+
+/* ── Screen-reader only utility ── */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+/* ── Base styles ── */
+html {
+	background-color: var(--bg);
+	color: var(--text-primary);
+	color-scheme: dark;
+}
+
+[data-theme='light'] {
+	color-scheme: light;
+}
+
+body {
+	font-family: var(--font-sans);
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Heading weights per spec §6 type scale: medium-only (500) for all
+   emphasis, including h1 and h2. No bold (600+) anywhere in the system.
+   Size + spacing carry the hierarchy, not weight. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-sans);
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--text-primary);
+	letter-spacing: -0.01em;
+}
+
+/* Legacy `.font-junicode` — mapped to the system sans stack. */
+.font-junicode,
+.font-junicode-italic {
+	font-family: var(--font-sans);
+	font-weight: 500;
+	letter-spacing: normal;
+}
+
+.font-junicode-italic {
+	font-style: italic;
+}
+
+/* ── Auth form animations ── */
+@keyframes authShake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	15% {
+		transform: translateX(-6px);
+	}
+	30% {
+		transform: translateX(5px);
+	}
+	45% {
+		transform: translateX(-4px);
+	}
+	60% {
+		transform: translateX(3px);
+	}
+	75% {
+		transform: translateX(-2px);
+	}
+}
+
+@keyframes authFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.auth-shake {
+	animation: authShake 0.4s var(--ease-out);
+}
+.auth-error-fade {
+	animation: authFadeIn 0.25s var(--ease-out);
+}
+
+/* ── Scroll-triggered animations ── */
+@keyframes zenReveal {
+	from {
+		opacity: 0;
+		filter: blur(4px);
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		filter: blur(0);
+		transform: translateY(0);
+	}
+}
+
+@keyframes zenFade {
+	from {
+		opacity: 0;
+		filter: blur(4px);
+	}
+	to {
+		opacity: 1;
+		filter: blur(0);
+	}
+}
+
+@keyframes zenScale {
+	from {
+		opacity: 0;
+		filter: blur(4px);
+		transform: scale(0.97);
+	}
+	to {
+		opacity: 1;
+		filter: blur(0);
+		transform: scale(1);
+	}
+}
+
+@keyframes heroEntrance {
+	from {
+		opacity: 0;
+		filter: blur(6px);
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		filter: blur(0);
+		transform: translateY(0);
+	}
+}
+
+.hero-child {
+	animation: heroEntrance 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+	animation-delay: var(--hero-delay, 0s);
+}
+
+[data-animate] {
+	opacity: 0;
+	filter: blur(4px);
+	transform: translateY(24px);
+}
+
+[data-animate].is-visible {
+	animation: zenReveal 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+[data-animate='fade'].is-visible {
+	animation: zenFade 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+[data-animate='scale'].is-visible {
+	animation: zenScale 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+[data-delay='1'] {
+	animation-delay: 150ms;
+}
+[data-delay='2'] {
+	animation-delay: 300ms;
+}
+[data-delay='3'] {
+	animation-delay: 450ms;
+}
+[data-delay='4'] {
+	animation-delay: 600ms;
+}
+[data-delay='5'] {
+	animation-delay: 750ms;
+}
+[data-delay='6'] {
+	animation-delay: 900ms;
+}
+
+/* ── Skeleton shimmer ── */
+@keyframes zenShimmer {
+	from {
+		background-position: -200% 0;
+	}
+	to {
+		background-position: 200% 0;
+	}
+}
+
+.zen-shimmer {
+	background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
+	background-size: 200% 100%;
+	animation: zenShimmer 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.zen-shimmer {
+		animation: none;
+	}
+}
+
+/* ── Context menu & dropdown ── */
+@keyframes contextMenuIn {
+	from {
+		opacity: 0;
+		transform: scale(0.95) translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes dropdownIn {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ── Agentic animations ── */
+@keyframes pulseDots {
+	0%,
+	100% {
+		opacity: 0.3;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+@keyframes fadeSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* ── Pull-to-refresh indicator ── */
+.ptr-indicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 0;
+	overflow: hidden;
+	opacity: 0;
+	transition:
+		height var(--transition-default),
+		opacity var(--transition-default);
+	pointer-events: none;
+}
+
+.ptr-spinner {
+	color: var(--text-primary);
+	opacity: 0.4;
+	transition: transform 0.1s linear;
+}
+
+.ptr-spinner.ptr-spinning {
+	animation: ptr-spin 0.8s linear infinite;
+}
+
+@keyframes ptr-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.ptr-refreshing .ptr-spinner {
+	opacity: 0.6;
+}
+
+/* ── Typing indicator ── */
+@keyframes typingPulse {
+	0%,
+	100% {
+		opacity: 0.3;
+	}
+	50% {
+		opacity: 0.8;
+	}
+}
+
+.typing-dot {
+	animation: typingPulse 1.4s ease-in-out infinite;
+}
+
+/* ── Syntax highlighting (highlight.js) ──
+ * Monochrome base with four semantic hues (success, warning, error,
+ * accent). Tuned to read well on --bg and --surface-2. */
+.hljs {
+	color: var(--text-primary);
+	background: transparent;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-type,
+.hljs-tag {
+	color: var(--accent);
+	font-weight: 500;
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-symbol,
+.hljs-template-variable {
+	color: var(--success);
+}
+
+.hljs-comment,
+.hljs-quote {
+	color: var(--text-tertiary);
+	font-style: italic;
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-regexp {
+	color: var(--warning);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-title.function_,
+.hljs-name {
+	color: var(--text-primary);
+	font-weight: 500;
+}
+
+.hljs-variable,
+.hljs-params,
+.hljs-attribute {
+	color: var(--text-secondary);
+}
+
+.hljs-meta,
+.hljs-meta .hljs-keyword,
+.hljs-doctag {
+	color: var(--text-secondary);
+}
+
+.hljs-deletion {
+	color: var(--error);
+	background: color-mix(in srgb, var(--error) 12%, transparent);
+}
+
+.hljs-addition {
+	color: var(--success);
+	background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.hljs-bullet,
+.hljs-link {
+	color: var(--accent);
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+.hljs-strong {
+	font-weight: 500;
+}
+
+/* ── Dialog / page transitions ── */
+@keyframes dialogFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes dialogContentIn {
+	from {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes pageIn {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.page-enter {
+	animation: pageIn 120ms var(--ease-out) forwards;
+}
+
+@keyframes messageIn {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.message-enter {
+	animation: messageIn 0.15s var(--ease-out) both;
+}
+
+@keyframes panelSlideIn {
+	from {
+		opacity: 0;
+		transform: translateX(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+.panel-slide-in {
+	animation: panelSlideIn 0.12s var(--ease-out) both;
+}
+
+.list-enter {
+	animation: fadeSlideUp 0.2s var(--ease-out) both;
+}
+
+/* ── Toast animations ── */
+@keyframes toastSlideIn {
+	from {
+		opacity: 0;
+		transform: translateX(100%);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes toastSlideOut {
+	from {
+		opacity: 1;
+		transform: translateX(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateX(100%) scale(0.95);
+	}
+}
+
+.toast-enter {
+	animation: toastSlideIn 250ms var(--ease-spring) both;
+}
+
+.toast-exit {
+	animation: toastSlideOut 200ms var(--ease-out) both;
+}
+
+@keyframes toastProgress {
+	from {
+		transform: scaleX(1);
+	}
+	to {
+		transform: scaleX(0);
+	}
+}
+
+/* ── Success pulse ── */
+@keyframes successPulse {
+	0% {
+		transform: scale(1);
+	}
+	40% {
+		transform: scale(1.06);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+.success-pulse {
+	animation: successPulse 0.4s var(--ease-spring) both;
+}
+
+/* ── Animated checkmark ── */
+@keyframes checkmarkCircle {
+	from {
+		stroke-dashoffset: 166;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes checkmarkCheck {
+	from {
+		stroke-dashoffset: 48;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+.checkmark-circle {
+	stroke-dasharray: 166;
+	stroke-dashoffset: 166;
+	animation: checkmarkCircle 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+	stroke-dasharray: 48;
+	stroke-dashoffset: 48;
+	animation: checkmarkCheck 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
+}
+
+/* ── Number counter tick ── */
+@keyframes numberTick {
+	from {
+		opacity: 0;
+		transform: translateY(-60%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.number-tick {
+	animation: numberTick 0.3s var(--ease-out) both;
+}
+
+/* ── Border pulse (drag-over) ── */
+@keyframes borderPulse {
+	0%,
+	100% {
+		border-color: var(--hairline);
+	}
+	50% {
+		border-color: var(--accent);
+	}
+}
+
+.border-pulse {
+	animation: borderPulse 1.2s ease-in-out infinite;
+}
+
+/* ── Expand height ── */
+@keyframes expandIn {
+	from {
+		opacity: 0;
+		max-height: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		max-height: 500px;
+		transform: translateY(0);
+	}
+}
+
+.expand-enter {
+	animation: expandIn 0.2s var(--ease-out) both;
+	overflow: hidden;
+}
+
+/* ── Shimmer glow ── */
+@keyframes shimmerGlow {
+	0% {
+		background-position: -200% 0;
+		opacity: 0.6;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		background-position: 200% 0;
+		opacity: 0.6;
+	}
+}
+
+.shimmer-glow {
+	background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 37%, var(--surface) 63%);
+	background-size: 200% 100%;
+	animation: shimmerGlow 1.5s ease-in-out infinite;
+}
+
+/* ── Card hover ── */
+.card-hover {
+	transition:
+		transform 0.2s var(--ease-out),
+		box-shadow 0.2s var(--ease-out),
+		border-color 0.2s var(--ease-out);
+}
+.card-hover:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	border-color: var(--hairline-strong);
+}
+.card-hover:active {
+	transform: translateY(0);
+	box-shadow: none;
+}
+
+[data-theme='light'] .card-hover:hover {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Micro-interactions ── */
+.press-scale {
+	transition: transform 0.15s var(--ease-out);
+}
+.press-scale:active {
+	transform: scale(0.97);
+}
+
+.hover-lift {
+	transition:
+		transform 0.2s var(--ease-out),
+		box-shadow 0.2s var(--ease-out);
+}
+.hover-lift:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-md);
+}
+.hover-lift:active {
+	transform: translateY(0);
+	box-shadow: var(--shadow-sm);
+}
+
+/* ── Fab bounce ── */
+@keyframes fabIn {
+	from {
+		opacity: 0;
+		transform: scale(0.6);
+	}
+	60% {
+		transform: scale(1.08);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.fab-enter {
+	animation: fabIn 0.35s var(--ease-spring) both;
+}
+
+/* ── New-message indicator ── */
+@keyframes slideUpFade {
+	from {
+		opacity: 0;
+		transform: translate(-50%, 8px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0);
+	}
+}
+
+.new-msg-indicator {
+	animation: slideUpFade 0.25s var(--ease-out) both;
+}
+
+/* ── Scrollbar hide ── */
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+/* ── Tooltip portal ── */
+.tooltip-portal {
+	position: fixed;
+	z-index: 9999;
+	padding: 5px 10px;
+	border-radius: 6px;
+	background: var(--tooltip-bg);
+	color: var(--tooltip-text);
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.4;
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+	pointer-events: none;
+	opacity: 0;
+	transform: scale(0.96);
+	transition:
+		opacity 0.15s ease-out,
+		transform 0.15s ease-out;
+	box-shadow: var(--shadow-md);
+}
+
+.tooltip-portal.tooltip-visible {
+	opacity: 1;
+	transform: scale(1);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	[data-animate] {
+		opacity: 1;
+		transform: none;
+		filter: none;
+		animation: none;
+	}
+
+	.zen-shimmer {
+		background: var(--surface);
+		animation: none;
+	}
+
+	.hero-child {
+		animation: none;
+		opacity: 1;
+		filter: none;
+		transform: none;
+	}
+
+	.page-enter,
+	.message-enter,
+	.panel-slide-in,
+	.list-enter,
+	.fab-enter,
+	.new-msg-indicator,
+	.toast-enter,
+	.toast-exit,
+	.success-pulse,
+	.number-tick,
+	.expand-enter {
+		animation: none;
+		opacity: 1;
+		transform: none;
+	}
+
+	.checkmark-circle,
+	.checkmark-check {
+		animation: none;
+		stroke-dashoffset: 0;
+	}
+
+	.border-pulse {
+		animation: none;
+	}
+
+	.shimmer-glow {
+		animation: none;
+		background: var(--surface);
+	}
+
+	.press-scale,
+	.hover-lift,
+	.card-hover {
+		transition: none;
+	}
+	.hover-lift:hover,
+	.card-hover:hover {
+		transform: none;
+		box-shadow: none;
+	}
+
+	[data-tooltip]::after {
+		transition: none;
+	}
+}

@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: arq-workers-pdb
+  namespace: agent-platform
+  labels:
+    app: arq-workers
+spec:
+  # Ensure at least 5 pods are always available during disruptions
+  # (voluntary evictions like node drain, cluster upgrades)
+  minAvailable: 5
+  selector:
+    matchLabels:
+      app: arq-workers

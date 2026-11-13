@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+uv run python /app/manage.py collectstatic --noinput
+
+exec uv run gunicorn config.asgi \
+    --bind 0.0.0.0:5000 \
+    --chdir=/app \
+    -k uvicorn_worker.UvicornWorker \
+    --workers "${GUNICORN_WORKERS:-4}" \
+    --timeout "${GUNICORN_TIMEOUT:-120}" \
+    --max-requests 10000 \
+    --max-requests-jitter 1000 \
+    --access-logfile -
